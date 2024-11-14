@@ -41,6 +41,7 @@ def draw_cube(x, y, z, highlight=False):
     glPopMatrix()
 
 # Ray creation from mouse position
+# Have numpy error in 'numpy.dtype size changed, may indicate binary incompatibility.'
 def get_ray_from_mouse(x, y):
     try:
         viewport = glGetIntegerv(GL_VIEWPORT)
@@ -113,6 +114,7 @@ def display():
 
     # Draw text
     glColor3f(1.0, 1.0, 1.0)
+    # Show X,Y location
     draw_text(10, window_height - 20, f"Mouse: ({mouse_x}, {mouse_y})")
     if grid_pos:
         draw_text(10, window_height - 40, f"Grid Coords: ({grid_pos[0]}, {grid_pos[1]}, {grid_pos[2]})")
