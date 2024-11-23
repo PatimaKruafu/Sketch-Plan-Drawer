@@ -1,6 +1,7 @@
 from OpenGL.GL import *
 from OpenGL.GLU import *
 from OpenGL.GLUT import *
+from OpenGL.GLUT.fonts import GLUT_BITMAP_HELVETICA_18
 import numpy as np
 
 # Window dimensions
@@ -129,12 +130,59 @@ def draw_text(x, y, text):
     for ch in text:
         glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, ord(ch))
 
+# Initialize a 3D list to store block data
+block_data = [[[0 for _ in range(grid_size)] for _ in range(grid_size)] for _ in range(grid_size)]
+
+# Draw block in orthographic projection
+def draw_block_ortho():
+    glMatrixMode(GL_PROJECTION)
+    glLoadIdentity()
+    glOrtho(-grid_size, grid_size, -grid_size, grid_size, -grid_size, grid_size)
+    glMatrixMode(GL_MODELVIEW)
+    glLoadIdentity()
+
+    # Front view
+    glViewport(0, window_height // 2, window_width // 2, window_height // 2)
+    draw_blocks()
+
+    # Top view
+    glViewport(window_width // 2, window_height // 2, window_width // 2, window_height // 2)
+    glRotatef(90, 1, 0, 0)
+    draw_blocks()
+
+    # Side view
+    glViewport(0, 0, window_width // 2, window_height // 2)
+    glRotatef(90, 0, 1, 0)
+    draw_blocks()
+
+    # Save block data to 3D list
+    for x in range(grid_size):
+        for y in range(grid_size):
+            for z in range(grid_size):
+                if is_block_present(x, y, z):
+                    block_data[x][y][z] = 1
+                    
+    # Print block data to console
+    print_block_data()
+
+
+def print_block_data():
+    for x in range(grid_size):
+        for y in range(grid_size):
+            for z in range(grid_size):
+                if block_data[x][y][z] == 1:
+                    print(f"Block present at ({x}, {y}, {z})")
+
+# Check if a block is present at the given coordinates
+def is_block_present(x, y, z):
+    if 0 <= x < grid_size and 0 <= y < grid_size and 0 <= z < grid_size:
+        return grid[x][y][z] == 1
+    return True  # Placeholder
 
 # Display callback
 def display():
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
     glLoadIdentity()
-    gluLookAt(0, 10, 20, 0, 0, 0, 0, 1, 0)
 
     # Draw grid
     draw_grid()
@@ -151,7 +199,33 @@ def display():
     draw_text(10, window_height - 40, f"Mouse: ({mouse_x}, {mouse_y}), Grid Pos: {grid_pos}")
     draw_text(10, window_height - 60, "Controls: W (North), S (South), A (West), D (East), Enter (Place/Remove Block)")
 
+    # Draw block in orthographic projection
+    draw_block_ortho()
+
     glutSwapBuffers()
+
+# Display callback
+#def display():
+#    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+#    glLoadIdentity()
+#    gluLookAt(0, 10, 20, 0, 0, 0, 0, 1, 0)
+
+#    # Draw grid
+#    draw_grid()
+
+#    # Draw blocks
+#    draw_blocks()
+
+#    # Highlight the current cursor position
+#    draw_cube(cursor_x - grid_size // 2, cursor_y, cursor_z - grid_size // 2, highlight=True)
+
+#    # Draw text
+#    glColor3f(1.0, 1.0, 1.0)
+#    draw_text(10, window_height - 20, f"Cursor: ({cursor_x}, {cursor_y}, {cursor_z})")
+#    draw_text(10, window_height - 40, f"Mouse: ({mouse_x}, {mouse_y}), Grid Pos: {grid_pos}")
+#    draw_text(10, window_height - 60, "Controls: W (North), S (South), A (West), D (East), Enter (Place/Remove Block)")
+
+#    glutSwapBuffers()
 
 
 # Reshape callback
