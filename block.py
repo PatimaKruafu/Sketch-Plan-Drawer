@@ -144,16 +144,25 @@ def draw_block_ortho():
     # Front view
     glViewport(0, window_height // 2, window_width // 2, window_height // 2)
     draw_blocks()
+    draw_text(10, window_height // 2 - 20, "Front View")
 
     # Top view
     glViewport(window_width // 2, window_height // 2, window_width // 2, window_height // 2)
     glRotatef(90, 1, 0, 0)
     draw_blocks()
+    draw_text(window_width // 2 + 10, window_height // 2 - 20, "Top View")
 
-    # Side view
+    # Left side view
     glViewport(0, 0, window_width // 2, window_height // 2)
     glRotatef(90, 0, 1, 0)
     draw_blocks()
+    draw_text(10, window_height // 2 - window_height // 2 + 20, "Left Side View")
+
+    # Right side view
+    glViewport(window_width // 2, 0, window_width // 2, window_height // 2)
+    glRotatef(-90, 0, 1, 0)
+    draw_blocks()
+    draw_text(window_width // 2 + 10, window_height // 2 - window_height // 2 + 20, "Right Side View")
 
     # Save block data to 3D list
     for x in range(grid_size):
@@ -161,7 +170,7 @@ def draw_block_ortho():
             for z in range(grid_size):
                 if is_block_present(x, y, z):
                     block_data[x][y][z] = 1
-                    
+
     # Print block data to console
     print_block_data()
 
