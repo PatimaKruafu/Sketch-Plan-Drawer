@@ -115,6 +115,10 @@ def key_press(key, x, y):
         cursor_x = max(0, cursor_x - 1)
     elif key == 'd':  # Move east
         cursor_x = min(grid_size - 1, cursor_x + 1)
+    elif key == 'r':  # Move up
+        cursor_y = min(cursor_y + 1, grid_size - 1)
+    elif key == 'f':  # Move down
+        cursor_y = max(cursor_y - 1, 0)
     elif key == '\r':  # Enter key to place/remove block
         if grid[cursor_x, cursor_y, cursor_z] == 0:  # Place block
             grid[cursor_x, cursor_y, cursor_z] = 1
@@ -248,7 +252,7 @@ def pers_display():
     glColor3f(1.0, 1.0, 1.0)
     draw_text(10, window_height - 20, f"Cursor: ({cursor_x}, {cursor_y}, {cursor_z})")
     draw_text(10, window_height - 40, f"Mouse: ({mouse_x}, {mouse_y}), Grid Pos: {grid_pos}")
-    draw_text(10, window_height - 60, "Controls: W (North), S (South), A (West), D (East), Enter (Place/Remove Block)")
+    draw_text(10, window_height - 60, "Controls: W (North), S (South), A (West), D (East), R (Up), F (Down), Enter (Place/Remove Block)")
 
     glutSwapBuffers()
 
