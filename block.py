@@ -133,6 +133,15 @@ def draw_text(x, y, text):
 # Initialize a 3D list to store block data
 block_data = [[[0 for _ in range(grid_size)] for _ in range(grid_size)] for _ in range(grid_size)]
 
+def draw_frame():
+    glColor3f(1.0, 1.0, 1.0)
+    glBegin(GL_LINE_LOOP)
+    glVertex2f(-grid_size, -grid_size)
+    glVertex2f(grid_size, -grid_size)
+    glVertex2f(grid_size, grid_size)
+    glVertex2f(-grid_size, grid_size)
+    glEnd()
+
 def draw_block_function():
     draw_grid()
     draw_blocks()
@@ -150,14 +159,18 @@ def draw_block_ortho():
     glViewport(0, window_height // 2, window_width // 2, window_height // 2)
     glLoadIdentity()
     draw_block_function()
-    draw_text(10, window_height // 2 - 20, "Front View")
+    draw_text(10, window_height // 2 + 20, "Front View")
+    draw_frame()
 
     # Top view
     glViewport(window_width // 2, window_height // 2, window_width // 2, window_height // 2)
     glLoadIdentity()
     glRotatef(90, 1, 0, 0)
     draw_block_function()
-    draw_text(window_width // 2 + 10, window_height // 2 - 20, "Top View")
+    draw_text(window_width // 2 + 10, window_height // 2 + 20, "Top View")
+    glRotatef(90, 1, 0, 0)
+    glTranslatef(0, 0, -grid_size)
+    draw_frame()
 
     # Left side view
     glViewport(0, 0, window_width // 2, window_height // 2)
@@ -165,6 +178,8 @@ def draw_block_ortho():
     glRotatef(90, 0, 1, 0)
     draw_block_function()
     draw_text(10, window_height // 2 - window_height // 2 + 20, "Left Side View")
+    glRotatef(90, 0, 1, 0)
+    draw_frame()
 
     # Right side view
     glViewport(window_width // 2, 0, window_width // 2, window_height // 2)
@@ -172,6 +187,8 @@ def draw_block_ortho():
     glRotatef(-90, 0, 1, 0)
     draw_block_function()
     draw_text(window_width // 2 + 10, window_height // 2 - window_height // 2 + 20, "Right Side View")
+    glRotatef(-90, 0, 1, 0)
+    draw_frame()
 
     # Save block data to 3D list
     for x in range(grid_size):
