@@ -133,6 +133,11 @@ def draw_text(x, y, text):
 # Initialize a 3D list to store block data
 block_data = [[[0 for _ in range(grid_size)] for _ in range(grid_size)] for _ in range(grid_size)]
 
+def draw_block_function():
+    draw_grid()
+    draw_blocks()
+    draw_cube(cursor_x - grid_size // 2, cursor_y, cursor_z - grid_size // 2, highlight=True)
+
 # Draw block in orthographic projection
 def draw_block_ortho():
     glMatrixMode(GL_PROJECTION)
@@ -143,25 +148,29 @@ def draw_block_ortho():
 
     # Front view
     glViewport(0, window_height // 2, window_width // 2, window_height // 2)
-    draw_blocks()
+    glLoadIdentity()
+    draw_block_function()
     draw_text(10, window_height // 2 - 20, "Front View")
 
     # Top view
     glViewport(window_width // 2, window_height // 2, window_width // 2, window_height // 2)
+    glLoadIdentity()
     glRotatef(90, 1, 0, 0)
-    draw_blocks()
+    draw_block_function()
     draw_text(window_width // 2 + 10, window_height // 2 - 20, "Top View")
 
     # Left side view
     glViewport(0, 0, window_width // 2, window_height // 2)
+    glLoadIdentity()
     glRotatef(90, 0, 1, 0)
-    draw_blocks()
+    draw_block_function()
     draw_text(10, window_height // 2 - window_height // 2 + 20, "Left Side View")
 
     # Right side view
     glViewport(window_width // 2, 0, window_width // 2, window_height // 2)
+    glLoadIdentity()
     glRotatef(-90, 0, 1, 0)
-    draw_blocks()
+    draw_block_function()
     draw_text(window_width // 2 + 10, window_height // 2 - window_height // 2 + 20, "Right Side View")
 
     # Save block data to 3D list
@@ -186,21 +195,12 @@ def print_block_data():
 def is_block_present(x, y, z):
     if 0 <= x < grid_size and 0 <= y < grid_size and 0 <= z < grid_size:
         return grid[x][y][z] == 1
-    return True  # Placeholder
+    return True
 
 # Display callback
 def display():
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
     glLoadIdentity()
-
-    # Draw grid
-    draw_grid()
-
-    # Draw blocks
-    draw_blocks()
-
-    # Highlight the current cursor position
-    draw_cube(cursor_x - grid_size // 2, cursor_y, cursor_z - grid_size // 2, highlight=True)
 
     # Draw text
     glColor3f(1.0, 1.0, 1.0)
@@ -212,30 +212,6 @@ def display():
     draw_block_ortho()
 
     glutSwapBuffers()
-
-# Display callback
-#def display():
-#    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
-#    glLoadIdentity()
-#    gluLookAt(0, 10, 20, 0, 0, 0, 0, 1, 0)
-
-#    # Draw grid
-#    draw_grid()
-
-#    # Draw blocks
-#    draw_blocks()
-
-#    # Highlight the current cursor position
-#    draw_cube(cursor_x - grid_size // 2, cursor_y, cursor_z - grid_size // 2, highlight=True)
-
-#    # Draw text
-#    glColor3f(1.0, 1.0, 1.0)
-#    draw_text(10, window_height - 20, f"Cursor: ({cursor_x}, {cursor_y}, {cursor_z})")
-#    draw_text(10, window_height - 40, f"Mouse: ({mouse_x}, {mouse_y}), Grid Pos: {grid_pos}")
-#    draw_text(10, window_height - 60, "Controls: W (North), S (South), A (West), D (East), Enter (Place/Remove Block)")
-
-#    glutSwapBuffers()
-
 
 # Reshape callback
 def reshape(w, h):
