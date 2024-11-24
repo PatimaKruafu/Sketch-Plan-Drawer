@@ -137,15 +137,6 @@ def draw_text(x, y, text):
 # Initialize a 3D list to store block data
 block_data = [[[0 for _ in range(grid_size)] for _ in range(grid_size)] for _ in range(grid_size)]
 
-def draw_frame():
-    glColor3f(1.0, 1.0, 1.0)
-    glBegin(GL_LINE_LOOP)
-    glVertex2f(-grid_size, -grid_size)
-    glVertex2f(grid_size, -grid_size)
-    glVertex2f(grid_size, grid_size)
-    glVertex2f(-grid_size, grid_size)
-    glEnd()
-
 def draw_block_function():
     draw_grid()
     draw_blocks()
@@ -155,7 +146,11 @@ def draw_block_function():
 def draw_block_ortho():
     glMatrixMode(GL_PROJECTION)
     glLoadIdentity()
-    glOrtho(-grid_size, grid_size, -grid_size, grid_size, -grid_size, grid_size)
+    aspect_ratio = (window_width // 2) / (window_height // 2)
+    if aspect_ratio > 1:
+        glOrtho(-grid_size * aspect_ratio, grid_size * aspect_ratio, -grid_size, grid_size, -grid_size, grid_size)
+    else:
+        glOrtho(-grid_size, grid_size, -grid_size / aspect_ratio, grid_size / aspect_ratio, -grid_size, grid_size)
     glMatrixMode(GL_MODELVIEW)
     glLoadIdentity()
 
@@ -164,7 +159,6 @@ def draw_block_ortho():
     glLoadIdentity()
     draw_block_function()
     draw_text(10, window_height // 2 + 20, "Front View")
-    draw_frame()
 
     # Top view
     glViewport(window_width // 2, window_height // 2, window_width // 2, window_height // 2)
@@ -172,9 +166,6 @@ def draw_block_ortho():
     glRotatef(90, 1, 0, 0)
     draw_block_function()
     draw_text(window_width // 2 + 10, window_height // 2 + 20, "Top View")
-    glRotatef(90, 1, 0, 0)
-    glTranslatef(0, 0, -grid_size)
-    draw_frame()
 
     # Left side view
     glViewport(0, 0, window_width // 2, window_height // 2)
@@ -182,8 +173,6 @@ def draw_block_ortho():
     glRotatef(90, 0, 1, 0)
     draw_block_function()
     draw_text(10, window_height // 2 - window_height // 2 + 20, "Left Side View")
-    glRotatef(90, 0, 1, 0)
-    draw_frame()
 
     # Right side view
     glViewport(window_width // 2, 0, window_width // 2, window_height // 2)
@@ -191,8 +180,6 @@ def draw_block_ortho():
     glRotatef(-90, 0, 1, 0)
     draw_block_function()
     draw_text(window_width // 2 + 10, window_height // 2 - window_height // 2 + 20, "Right Side View")
-    glRotatef(-90, 0, 1, 0)
-    draw_frame()
 
     # Save block data to 3D list
     for x in range(grid_size):
@@ -218,16 +205,19 @@ def is_block_present(x, y, z):
         return grid[x][y][z] == 1
     return True
 
+def instructions_text():
+    # Draw text
+    glColor3f(1.0, 1.0, 1.0)
+    draw_text(10, window_height - 20, f"Cursor: ({cursor_x}, {cursor_y}, {cursor_z})")
+    draw_text(10, window_height - 40, f"Mouse: ({mouse_x}, {mouse_y}), Grid Pos: {grid_pos}")
+    draw_text(10, window_height - 60, "Controls: W (North), S (South), A (West), D (East), R (Up), F (Down), Enter (Place/Remove Block)")
+
 # Display callback
 def display():
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
     glLoadIdentity()
 
-    # Draw text
-    glColor3f(1.0, 1.0, 1.0)
-    draw_text(10, window_height - 20, f"Cursor: ({cursor_x}, {cursor_y}, {cursor_z})")
-    draw_text(10, window_height - 40, f"Mouse: ({mouse_x}, {mouse_y}), Grid Pos: {grid_pos}")
-    draw_text(10, window_height - 60, "Controls: W (North), S (South), A (West), D (East), Enter (Place/Remove Block)")
+    instructions_text()
 
     # Draw block in orthographic projection
     draw_block_ortho()
@@ -239,20 +229,9 @@ def pers_display():
     glLoadIdentity()
     gluLookAt(0, 10, 20, 0, 0, 0, 0, 1, 0)
 
-    # Draw grid
-    draw_grid()
+    instructions_text()
 
-    # Draw blocks
-    draw_blocks()
-
-    # Highlight the current cursor position
-    draw_cube(cursor_x - grid_size // 2, cursor_y, cursor_z - grid_size // 2, highlight=True)
-
-    # Draw text
-    glColor3f(1.0, 1.0, 1.0)
-    draw_text(10, window_height - 20, f"Cursor: ({cursor_x}, {cursor_y}, {cursor_z})")
-    draw_text(10, window_height - 40, f"Mouse: ({mouse_x}, {mouse_y}), Grid Pos: {grid_pos}")
-    draw_text(10, window_height - 60, "Controls: W (North), S (South), A (West), D (East), R (Up), F (Down), Enter (Place/Remove Block)")
+    draw_block_function()
 
     glutSwapBuffers()
 
@@ -265,7 +244,6 @@ def reshape(w, h):
     glLoadIdentity()
     gluPerspective(60, w / h, 0.5, 60.0)
     glMatrixMode(GL_MODELVIEW)
-
 
 # Main function
 def main():
