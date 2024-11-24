@@ -230,6 +230,28 @@ def display():
 
     glutSwapBuffers()
 
+def pers_display():
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+    glLoadIdentity()
+    gluLookAt(0, 10, 20, 0, 0, 0, 0, 1, 0)
+
+    # Draw grid
+    draw_grid()
+
+    # Draw blocks
+    draw_blocks()
+
+    # Highlight the current cursor position
+    draw_cube(cursor_x - grid_size // 2, cursor_y, cursor_z - grid_size // 2, highlight=True)
+
+    # Draw text
+    glColor3f(1.0, 1.0, 1.0)
+    draw_text(10, window_height - 20, f"Cursor: ({cursor_x}, {cursor_y}, {cursor_z})")
+    draw_text(10, window_height - 40, f"Mouse: ({mouse_x}, {mouse_y}), Grid Pos: {grid_pos}")
+    draw_text(10, window_height - 60, "Controls: W (North), S (South), A (West), D (East), Enter (Place/Remove Block)")
+
+    glutSwapBuffers()
+
 # Reshape callback
 def reshape(w, h):
     global window_width, window_height
@@ -243,15 +265,35 @@ def reshape(w, h):
 
 # Main function
 def main():
+    global main_window, pers_window, window_width, window_height
     glutInit()
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH)
     glutInitWindowSize(window_width, window_height)
-    glutCreateWindow(b"3D Block Placement - Keyboard and Mouse Interaction")
+
+    glutInitWindowPosition(100, 100)
+    main_window = glutCreateWindow(b"3D Block Placement - Orthographic Projection")
     init()
     glutDisplayFunc(display)
     glutReshapeFunc(reshape)
     glutKeyboardFunc(key_press)
     glutPassiveMotionFunc(mouse_motion)
+
+    glutInitWindowPosition(100 + window_width, 100)
+    pers_window = glutCreateWindow(b"3D Block Placement - Perspective Projection")
+    glutDisplayFunc(pers_display)
+    glutReshapeFunc(reshape)
+    glutKeyboardFunc(key_press)
+    glutPassiveMotionFunc(mouse_motion)
+
+    def update_windows():
+        glutSetWindow(main_window)
+        glutPostRedisplay()
+        glutSetWindow(pers_window)
+        glutPostRedisplay()
+
+    # Set the idle function to update both windows
+    glutIdleFunc(update_windows)
+
     glutMainLoop()
 
 
