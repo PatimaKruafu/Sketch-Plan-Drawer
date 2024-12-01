@@ -199,11 +199,13 @@ def print_block_data():
                 if block_data[x][y][z] == 1:
                     print(f"Block present at ({x}, {y}, {z})")
 
+
 # Check if a block is present at the given coordinates
 def is_block_present(x, y, z):
     if 0 <= x < grid_size and 0 <= y < grid_size and 0 <= z < grid_size:
         return grid[x][y][z] == 1
     return True
+
 
 def instructions_text():
     # Draw text
