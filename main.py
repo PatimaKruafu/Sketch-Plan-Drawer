@@ -151,9 +151,11 @@ def draw_cube(x, y, z, highlight=False):
     glPushMatrix()
     glTranslatef(x + CUBE_OFFSET, y + CUBE_OFFSET, z + CUBE_OFFSET)
     if highlight:
-        glColor3f(1.0, 1.0, 0.0)  # Highlight color for the cursor
+        #glColor3f(1.0, 1.0, 0.0)  # Highlight color for the cursor
+        glColor3f(222/255, 222/255, 47/255)  # Highlight color for the cursor
     else:
-        glColor3f(1.0, 0.0, 0.0)  # Red color for cubes
+        #glColor3f(1.0, 0.0, 0.0)  # Red color for cubes
+        glColor3f(79/255, 194/255, 152/255)
     glutSolidCube(CUBE_SIZE)
     glPopMatrix()
 
