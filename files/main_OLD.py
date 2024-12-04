@@ -4,7 +4,6 @@ from OpenGL.GLUT import *
 from OpenGL.GLUT.fonts import GLUT_BITMAP_HELVETICA_18
 import numpy as np
 import math
-import pickle
 
 # Window dimensions
 window_width, window_height = 800, 600
@@ -24,28 +23,9 @@ grid_pos = None
 #--------------------newcode----------------------
 
 CUBE_SIZE = 1
-CUBE_OFFSET = CUBE_SIZE / 2
-
-# Dictionary to store multiple grid states
-grid_slots = {}
-
-def save_grid(slot):
-    """Save the current grid state to a slot."""
-    grid_slots[slot] = np.copy(grid)
-    print(f"Grid saved to slot {slot}")
-
-def load_grid(slot):
-    """Load the grid state from a slot."""
-    global grid
-    if slot in grid_slots:
-        grid = np.copy(grid_slots[slot])
-        print(f"Grid loaded from slot {slot}")
-    else:
-        print(f"Slot {slot} is empty")
+CUBE_OFFSET = CUBE_SIZE/2
 
 #--------------------newcode----------------------
-
-
 
 #--------------------Init----------------------
 # Initialize OpenGL and GLUT
@@ -64,7 +44,7 @@ def init():
 
 # Draw grid on the ground (y = 0 plane)
 def draw_grid():
-    HALF_GRID = int(GRID_SIZE / 2)
+    HALF_GRID = int(GRID_SIZE/2)
     glColor3f(0.5, 0.5, 0.5)  # Grid color
     glBegin(GL_LINES)
     for i in range(-HALF_GRID, HALF_GRID + 1):
@@ -75,7 +55,7 @@ def draw_grid():
     glEnd()
 
 def draw_reference_line():
-    HALF_GRID = int(GRID_SIZE / 2)
+    HALF_GRID = int(GRID_SIZE/2)
     glColor3f(1, 0, 0)
     glBegin(GL_LINES)
     glVertex3f(-HALF_GRID, 0, -HALF_GRID)
@@ -127,7 +107,7 @@ def draw_block_ortho():
     glMatrixMode(GL_PROJECTION)
     glLoadIdentity()
     aspect_ratio = (window_width // 2) / (window_height // 2)
-    if (aspect_ratio > 1):
+    if aspect_ratio > 1:
         glOrtho(-GRID_SIZE * aspect_ratio, GRID_SIZE * aspect_ratio, -GRID_SIZE, GRID_SIZE, -GRID_SIZE, GRID_SIZE)
     else:
         glOrtho(-GRID_SIZE, GRID_SIZE, -GRID_SIZE / aspect_ratio, GRID_SIZE / aspect_ratio, -GRID_SIZE, GRID_SIZE)
@@ -248,62 +228,22 @@ def key_press(key, x, y):
     # Button ">"
     elif key == '.':
         camera += 1
-        camera = (camera % 4)
         #SelectCamera(camera)
     # Button "<"
     elif key == ',':
         camera -= 1
-        camera = (camera % 4)
         #SelectCamera(camera)
-    
-    # Save grid to file
-    elif key == 'k':
-        save_grid_to_file()
-    
-    # Load grid from file
-   
-
-    # Save grid to slot
-    elif key == '1':
-        save_grid('slot1')
-    elif key == '2':
-        save_grid('slot2')
-    elif key == '3':
-        save_grid('slot3')
-
-    # Load grid from slot
-    elif key == '4':
-        load_grid('slot1')
-    elif key == '5':
-        load_grid('slot2')
-    elif key == '6':
-        load_grid('slot3')
-
-    elif key == 'l':
-        load_grid_from_file()
+    camera = (camera % 4)
 
     glutPostRedisplay()
 
-# Save grid to file
-def save_grid_to_file():
-    with open('grid_save.pkl', 'wb') as f:
-        pickle.dump(grid, f)
-    print("Grid saved to grid_save.pkl")
 
-# Load grid from file
-def load_grid_from_file():
-    global grid
-    try:
-        with open('grid_save.pkl', 'rb') as f:
-            grid = pickle.load(f)
-        print("Grid loaded from grid_save.pkl")
-    except FileNotFoundError:
-        print("No save file found.")
 # Draw text on the screen
 def draw_text(x, y, text):
     glWindowPos2f(x, y)
     for ch in text:
         glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, ord(ch))
+
 
 
 
@@ -386,9 +326,6 @@ def display():
     draw_text(10, window_height - 40, f"Mouse: ({mouse_x}, {mouse_y}), Grid Pos: {grid_pos}")
     draw_text(10, window_height - 60, "Controls: W (North), S (South), A (West), D (East), Enter (Place/Remove Block)")
     draw_text(10, window_height - 80, f"View : {camera} pos : {eye_position}")
-    draw_text(10, window_height - 100, "Press 'K' to Save, 'L' to Load")
-    draw_text(10, window_height - 120, "Press '1', '2', '3' to Save to Slots")
-    draw_text(10, window_height - 140, "Press '4', '5', '6' to Load from Slots")
 
     #RotateCamera(eye_position, new_eye_position)
     glutSwapBuffers()

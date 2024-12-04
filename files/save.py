@@ -4,6 +4,7 @@ from OpenGL.GLUT import *
 from OpenGL.GLUT.fonts import GLUT_BITMAP_HELVETICA_18
 import numpy as np
 import math
+import pickle
 
 # Window dimensions
 window_width, window_height = 800, 600
@@ -23,9 +24,28 @@ grid_pos = None
 #--------------------newcode----------------------
 
 CUBE_SIZE = 1
-CUBE_OFFSET = CUBE_SIZE/2
+CUBE_OFFSET = CUBE_SIZE / 2
+
+# Dictionary to store multiple grid states
+grid_slots = {}
+
+def save_grid(slot):
+    """Save the current grid state to a slot."""
+    grid_slots[slot] = np.copy(grid)
+    print(f"Grid saved to slot {slot}")
+
+def load_grid(slot):
+    """Load the grid state from a slot."""
+    global grid
+    if slot in grid_slots:
+        grid = np.copy(grid_slots[slot])
+        print(f"Grid loaded from slot {slot}")
+    else:
+        print(f"Slot {slot} is empty")
 
 #--------------------newcode----------------------
+
+
 
 #--------------------Init----------------------
 # Initialize OpenGL and GLUT
@@ -37,8 +57,6 @@ def init():
     glMatrixMode(GL_MODELVIEW)
     glEnable(GL_DEPTH_TEST)
     glClearColor(0.2, 0.3, 0.4, 1.0)  # Background color
-    glEnable(GL_BLEND)
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 #--------------------Init----------------------
 
 
@@ -46,8 +64,8 @@ def init():
 
 # Draw grid on the ground (y = 0 plane)
 def draw_grid():
-    HALF_GRID = int(GRID_SIZE/2)
-    glColor3f(0.5, 0.5, 0.5)
+    HALF_GRID = int(GRID_SIZE / 2)
+    glColor3f(0.5, 0.5, 0.5)  # Grid color
     glBegin(GL_LINES)
     for i in range(-HALF_GRID, HALF_GRID + 1):
         glVertex3f(i, 0, -HALF_GRID)
@@ -56,18 +74,8 @@ def draw_grid():
         glVertex3f(HALF_GRID, 0, i)
     glEnd()
 
-    glColor4f(0.0, 0.0, 0.0, 0.5)
-    for i in range(-HALF_GRID, HALF_GRID):
-        for j in range(-HALF_GRID, HALF_GRID):
-            glBegin(GL_QUADS)
-            glVertex3f(i, 0, j)
-            glVertex3f(i + 1, 0, j)
-            glVertex3f(i + 1, 0, j + 1)
-            glVertex3f(i, 0, j + 1)
-            glEnd()
-
 def draw_reference_line():
-    HALF_GRID = int(GRID_SIZE/2)
+    HALF_GRID = int(GRID_SIZE / 2)
     glColor3f(1, 0, 0)
     glBegin(GL_LINES)
     glVertex3f(-HALF_GRID, 0, -HALF_GRID)
@@ -119,7 +127,7 @@ def draw_block_ortho():
     glMatrixMode(GL_PROJECTION)
     glLoadIdentity()
     aspect_ratio = (window_width // 2) / (window_height // 2)
-    if aspect_ratio > 1:
+    if (aspect_ratio > 1):
         glOrtho(-GRID_SIZE * aspect_ratio, GRID_SIZE * aspect_ratio, -GRID_SIZE, GRID_SIZE, -GRID_SIZE, GRID_SIZE)
     else:
         glOrtho(-GRID_SIZE, GRID_SIZE, -GRID_SIZE / aspect_ratio, GRID_SIZE / aspect_ratio, -GRID_SIZE, GRID_SIZE)
@@ -187,9 +195,6 @@ def get_ray_from_mouse(x, y):
         print(f"Error in get_ray_from_mouse: {e}")
         return None
 
-def map_to_new_range(value, old_min, old_max, new_min, new_max):
-    # Linear transformation formula
-    return new_min + (value - old_min) * (new_max - new_min) / (old_max - old_min)
 
 # Calculate grid position from mouse coordinates
 def get_grid_position(mouse_x, mouse_y):
@@ -203,18 +208,6 @@ def get_grid_position(mouse_x, mouse_y):
     grid_x = round(ray[0] * t)
     grid_y = 0
     grid_z = round(ray[2] * t)
-
-    # Map grid positions from -5-5 to 0-9
-    grid_x = map_to_new_range(grid_x, -5, 5, 9, 0)
-    grid_z = map_to_new_range(grid_z, -5, 5, 9, 0)
-
-    grid_x = round(grid_x)
-    grid_z = round(grid_z)
-
-    grid_x = int(grid_x)
-    grid_y = int(grid_y)
-    grid_z = int(grid_z)
-    
     return [grid_x, grid_y, grid_z]
 
 
@@ -224,7 +217,6 @@ def mouse_motion(x, y):
     mouse_x, mouse_y = x, y
     grid_pos = get_grid_position(x, y)
     glutPostRedisplay()
-
 #--------------------Ray Casting 3D Selection----------------------
 
 camera = 0
@@ -256,14 +248,57 @@ def key_press(key, x, y):
     # Button ">"
     elif key == '.':
         camera += 1
+        camera = (camera % 4)
         #SelectCamera(camera)
     # Button "<"
     elif key == ',':
         camera -= 1
+        camera = (camera % 4)
         #SelectCamera(camera)
-    camera = (camera % 4)
+    
+    # Save grid to file
+    elif key == 'k':
+        save_grid_to_file()
+    
+    # Load grid from file
+   
+
+    # Save grid to slot
+    elif key == '1':
+        save_grid('slot1')
+    elif key == '2':
+        save_grid('slot2')
+    elif key == '3':
+        save_grid('slot3')
+
+    # Load grid from slot
+    elif key == '4':
+        load_grid('slot1')
+    elif key == '5':
+        load_grid('slot2')
+    elif key == '6':
+        load_grid('slot3')
+
+    elif key == 'l':
+        load_grid_from_file()
 
     glutPostRedisplay()
+
+# Save grid to file
+def save_grid_to_file():
+    with open('grid_save.pkl', 'wb') as f:
+        pickle.dump(grid, f)
+    print("Grid saved to grid_save.pkl")
+
+# Load grid from file
+def load_grid_from_file():
+    global grid
+    try:
+        with open('grid_save.pkl', 'rb') as f:
+            grid = pickle.load(f)
+        print("Grid loaded from grid_save.pkl")
+    except FileNotFoundError:
+        print("No save file found.")
 
 
 # Draw text on the screen
@@ -271,7 +306,6 @@ def draw_text(x, y, text):
     glWindowPos2f(x, y)
     for ch in text:
         glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, ord(ch))
-
 
 
 
@@ -354,6 +388,9 @@ def display():
     draw_text(10, window_height - 40, f"Mouse: ({mouse_x}, {mouse_y}), Grid Pos: {grid_pos}")
     draw_text(10, window_height - 60, "Controls: W (North), S (South), A (West), D (East), Enter (Place/Remove Block)")
     draw_text(10, window_height - 80, f"View : {camera} pos : {eye_position}")
+    draw_text(10, window_height - 100, "Press 'K' to Save, 'L' to Load")
+    draw_text(10, window_height - 120, "Press '1', '2', '3' to Save to Slots")
+    draw_text(10, window_height - 140, "Press '4', '5', '6' to Load from Slots")
 
     #RotateCamera(eye_position, new_eye_position)
     glutSwapBuffers()
@@ -369,14 +406,14 @@ def main():
     init()
     glutDisplayFunc(display_ortho)
     glutKeyboardFunc(key_press)
-    glutPassiveMotionFunc(mouse_motion)
+    #glutPassiveMotionFunc(mouse_motion)
 
     glutInitWindowPosition(100 + window_width, 100)
     main_window = glutCreateWindow(b"Sketch Plan Drawer")
     init()
     glutDisplayFunc(display)
     glutKeyboardFunc(key_press)
-    glutPassiveMotionFunc(mouse_motion)
+    #glutPassiveMotionFunc(mouse_motion)
 
     def update_windows():
         glutSetWindow(main_window)

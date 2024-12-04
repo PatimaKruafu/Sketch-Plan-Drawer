@@ -4,7 +4,6 @@ from OpenGL.GLUT import *
 from OpenGL.GLUT.fonts import GLUT_BITMAP_HELVETICA_18
 import numpy as np
 import math
-import pickle
 
 # Window dimensions
 window_width, window_height = 800, 600
@@ -20,7 +19,6 @@ cursor_x, cursor_y, cursor_z = GRID_SIZE // 2, 0, GRID_SIZE // 2  # Start in the
 selected_block = None
 mouse_x, mouse_y = 0, 0
 grid_pos = None
-layer = 0
 
 #--------------------newcode----------------------
 
@@ -28,56 +26,6 @@ CUBE_SIZE = 1
 CUBE_OFFSET = CUBE_SIZE/2
 
 #--------------------newcode----------------------
-
-#---Save And Load Function
-# Dictionary to store multiple grid states
-grid_slots = {}
-current_slot = 0
-
-is_saved = False
-
-file_status = "loaded from"
-
-def save_grid(slot):
-    global current_slot, is_saved, file_status
-
-    """Save the current grid state to a slot."""
-    grid_slots[slot] = np.copy(grid)
-    current_slot = slot
-    print(f"Grid saved to slot {slot}")
-    is_saved = True
-    file_status = "saved"
-
-def load_grid(slot):
-    """Load the grid state from a slot."""
-    global grid, current_slot, file_status
-    
-    if slot in grid_slots:
-        grid = np.copy(grid_slots[slot])
-        print(f"Grid loaded from slot {slot}")
-        file_status = "loaded"
-        current_slot = slot
-    else:
-        print(f"Slot {slot} is empty")
-
-    
-
-# Save grid to file
-def save_grid_to_file():
-    with open('grid_save.pkl', 'wb') as f:
-        pickle.dump(grid, f)
-    print("Grid saved to grid_save.pkl")
-
-# Load grid from file
-def load_grid_from_file():
-    global grid
-    try:
-        with open('grid_save.pkl', 'rb') as f:
-            grid = pickle.load(f)
-        print("Grid loaded from grid_save.pkl")
-    except FileNotFoundError:
-        print("No save file found.")
-#---Save And Load Function
 
 #--------------------Init----------------------
 # Initialize OpenGL and GLUT
@@ -160,9 +108,7 @@ def draw_cube(x, y, z, highlight=False):
 def draw_block_function():
     draw_grid()
     draw_blocks()
-    #draw_cube(cursor_x - GRID_SIZE // 2, cursor_y, cursor_z - GRID_SIZE // 2, highlight=True)
-    if grid_pos is not None:
-        draw_cube(grid_pos[0] - GRID_SIZE // 2, grid_pos[1], grid_pos[2] - GRID_SIZE // 2, highlight=True)
+    draw_cube(cursor_x - GRID_SIZE // 2, cursor_y, cursor_z - GRID_SIZE // 2, highlight=True)
 
 
 #--------------------Draw Blocks----------------------
@@ -247,7 +193,6 @@ def map_to_new_range(value, old_min, old_max, new_min, new_max):
 
 # Calculate grid position from mouse coordinates
 def get_grid_position(mouse_x, mouse_y):
-    global layer
     ray = get_ray_from_mouse(mouse_x, mouse_y)
     if ray is None:
         return None
@@ -255,38 +200,20 @@ def get_grid_position(mouse_x, mouse_y):
     if ray[1] == 0:
         return None
     t = -ray[1] / ray[1]
-
     grid_x = round(ray[0] * t)
-    grid_y = layer
+    grid_y = 0
     grid_z = round(ray[2] * t)
-
-    """ if grid_pos is not None:
-        grid_y = grid_pos[1]
-    else:
-        grid_y = 0 """
-    
 
     # Map grid positions from -5-5 to 0-9
     grid_x = map_to_new_range(grid_x, -5, 5, 9, 0)
     grid_z = map_to_new_range(grid_z, -5, 5, 9, 0)
 
-    if (abs(grid_x) > GRID_SIZE or abs(grid_y) > GRID_SIZE or abs(grid_z) > GRID_SIZE):
-        grid_x = None
-        grid_z = None
+    grid_x = round(grid_x)
+    grid_z = round(grid_z)
 
-        grid_x = None
-        grid_y = None
-        grid_z = None
-        return None
-    else:
-        #grid_x = round(grid_x)
-        #grid_z = round(grid_z)
-        grid_x = math.floor(grid_x)
-        grid_z = math.floor(grid_z)
-
-        grid_x = int(grid_x)
-        grid_y = int(grid_y)
-        grid_z = int(grid_z)
+    grid_x = int(grid_x)
+    grid_y = int(grid_y)
+    grid_z = int(grid_z)
     
     return [grid_x, grid_y, grid_z]
 
@@ -296,33 +223,12 @@ def mouse_motion(x, y):
     global mouse_x, mouse_y, grid_pos
     mouse_x, mouse_y = x, y
     grid_pos = get_grid_position(x, y)
-    if grid_pos is None:
-        return None
-    if (abs(grid_pos[0]) > GRID_SIZE or abs(grid_pos[1]) > GRID_SIZE or abs(grid_pos[2]) > GRID_SIZE):
-        pass
-    """ else:
-        if grid[grid_pos[0]][grid_pos[1]][grid_pos[2]] == 1:
-            if abs(grid_pos[1]) < GRID_SIZE:
-                grid_pos[1] += 1 """
-    
+    if grid[grid_pos[0]][grid_pos[1]][grid_pos[2]] == 1:
+        if abs(grid_pos[1]) < GRID_SIZE/2:
+            grid_pos[1] += 1
+    print(grid_pos)
     glutPostRedisplay()
 
-def OnMouseClick(button, state, x, y):
-    global clicked, file_status
-    if button == GLUT_LEFT_BUTTON and state == GLUT_DOWN:
-        if grid_pos is not None:
-            place_block(grid_pos[0], grid_pos[1], grid_pos[2])
-        clicked = True
-        file_status = "not saved"
-
-    else:
-        clicked = False
-
-def place_block(x, y, z):
-    if grid[grid_pos[0], grid_pos[1], grid_pos[2]] == 0:  # Place block
-        grid[grid_pos[0], grid_pos[1], grid_pos[2]] = 1
-    else:  # Remove block
-        grid[grid_pos[0], grid_pos[1], grid_pos[2]] = 0
 #--------------------Ray Casting 3D Selection----------------------
 
 camera = 0
@@ -331,7 +237,7 @@ sketch_view = "front"
 
 # Keyboard interaction handler
 def key_press(key, x, y):
-    global cursor_x, cursor_y, cursor_z, camera, layer
+    global cursor_x, cursor_y, cursor_z, camera
     key = key.decode("utf-8").lower()
 
     if key == 'w':  # Move north
@@ -342,50 +248,23 @@ def key_press(key, x, y):
         cursor_x = max(0, cursor_x - 1)
     elif key == 'd':  # Move east
         cursor_x = min(GRID_SIZE - 1, cursor_x + 1)
-    elif key == 'z':  # Down
-        #cursor_y = min(GRID_SIZE - 1, cursor_y - 1)
-        layer = min(GRID_SIZE - 1, layer - 1)
-    elif key == 'c':  # Up
-        #cursor_y = min(GRID_SIZE - 1, cursor_y + 1)
-        layer = min(GRID_SIZE - 1, layer + 1)
+    elif key == 'o':  # Move east
+        cursor_y = min(GRID_SIZE - 1, cursor_y - 1)
+    elif key == 'p':  # Move east
+        cursor_y = min(GRID_SIZE - 1, cursor_y + 1)
     elif key == '\r':  # Enter key to place/remove block
         if grid[cursor_x, cursor_y, cursor_z] == 0:  # Place block
             grid[cursor_x, cursor_y, cursor_z] = 1
         else:  # Remove block
             grid[cursor_x, cursor_y, cursor_z] = 0
     # Button ">"
-    elif key == 'q':
+    elif key == '.':
         camera += 1
         #SelectCamera(camera)
     # Button "<"
-    elif key == 'e':
+    elif key == ',':
         camera -= 1
         #SelectCamera(camera)
-
-    # Save grid to file
-    elif key == 'k':
-        save_grid_to_file()   
-    # Load grid from file
-
-    # Save grid to slot
-    elif key == '1':
-        save_grid('slot1')
-    elif key == '2':
-        save_grid('slot2')
-    elif key == '3':
-        save_grid('slot3')
-
-    # Load grid from slot
-    elif key == '4':
-        load_grid('slot1')
-    elif key == '5':
-        load_grid('slot2')
-    elif key == '6':
-        load_grid('slot3')
-
-    elif key == 'l':
-        load_grid_from_file()
-    layer = layer % GRID_SIZE
     camera = (camera % 4)
 
     glutPostRedisplay()
@@ -396,6 +275,13 @@ def draw_text(x, y, text):
     glWindowPos2f(x, y)
     for ch in text:
         glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, ord(ch))
+
+
+
+
+
+
+
 
 #--------------------Camera Control----------------------
 
@@ -462,36 +348,16 @@ def display():
     #gluLookAt(LOOKAT_POSITION[0], LOOKAT_POSITION[1], LOOKAT_POSITION[2], 0, 0, 0, 0, 1, 0)
     draw_reference_line()
     draw_block_function()
-    draw_grid()
-    draw_blocks()
 
     # Highlight the current cursor position
-    #draw_cube(cursor_x - GRID_SIZE // 2, cursor_y, cursor_z - GRID_SIZE // 2, highlight=True)
+    draw_cube(cursor_x - GRID_SIZE // 2, cursor_y, cursor_z - GRID_SIZE // 2, highlight=True)
 
     # Draw text
     glColor3f(1.0, 1.0, 1.0)
     draw_text(10, window_height - 20, f"Cursor: ({cursor_x}, {cursor_y}, {cursor_z})")
-    draw_text(10, window_height - 40, f"Mouse: ({mouse_x}, {mouse_y}), Grid Pos: {grid_pos}, Draw Layer: {layer}")
-    #draw_text(10, window_height - 60, "Controls: W (North), S (South), A (West), D (East), Enter (Place/Remove Block)")
-    #draw_text(10, window_height - 80, f"View : {camera} pos : {eye_position}")
-    
-    draw_text(10, window_height - 80, f"Save Slot : {current_slot}")
-    
-    if file_status == "saved":
-        draw_text(10, window_height - 100, f"Saved At Slot : {current_slot}")
-    elif file_status == "loaded":
-        draw_text(10, window_height - 100, f"Loaded From Slot : {current_slot}")
-    elif file_status == "not saved":
-        draw_text(10, window_height - 100, f"Not Saved")
-
-    
-    draw_text(window_width - 300, window_height - 20, "Press 'K' to Save, 'L' to Load")
-    draw_text(window_width - 300, window_height - 40, "Press '1', '2', '3' to Save to Slots")
-    draw_text(window_width - 300, window_height - 60, "Press '4', '5', '6' to Load from Slots")
-
-    draw_text(window_width - 630, 0 + 20, "Press Q or E to Rotate Camera Counter Clockwise or Clockwise")
-    draw_text(window_width - 630, 0 + 40, "Press Z or E to Change Vertical Drawing Layer down 1 layer or up 1 layer")
-
+    draw_text(10, window_height - 40, f"Mouse: ({mouse_x}, {mouse_y}), Grid Pos: {grid_pos}")
+    draw_text(10, window_height - 60, "Controls: W (North), S (South), A (West), D (East), Enter (Place/Remove Block)")
+    draw_text(10, window_height - 80, f"View : {camera} pos : {eye_position}")
 
     #RotateCamera(eye_position, new_eye_position)
     glutSwapBuffers()
@@ -508,7 +374,6 @@ def main():
     glutDisplayFunc(display_ortho)
     glutKeyboardFunc(key_press)
     glutPassiveMotionFunc(mouse_motion)
-    glutMouseFunc(OnMouseClick) # mouse clicking function
 
     glutInitWindowPosition(100 + window_width, 100)
     main_window = glutCreateWindow(b"Sketch Plan Drawer")
@@ -516,7 +381,6 @@ def main():
     glutDisplayFunc(display)
     glutKeyboardFunc(key_press)
     glutPassiveMotionFunc(mouse_motion)
-    glutMouseFunc(OnMouseClick) # mouse clicking function
 
     def update_windows():
         glutSetWindow(main_window)

@@ -108,7 +108,9 @@ def draw_cube(x, y, z, highlight=False):
 def draw_block_function():
     draw_grid()
     draw_blocks()
-    draw_cube(cursor_x - GRID_SIZE // 2, cursor_y, cursor_z - GRID_SIZE // 2, highlight=True)
+    #draw_cube(cursor_x - GRID_SIZE // 2, cursor_y, cursor_z - GRID_SIZE // 2, highlight=True)
+    if grid_pos is not None:
+        draw_cube(grid_pos[0] - GRID_SIZE // 2, grid_pos[1], grid_pos[2] - GRID_SIZE // 2, highlight=True)
 
 
 #--------------------Draw Blocks----------------------
@@ -208,12 +210,21 @@ def get_grid_position(mouse_x, mouse_y):
     grid_x = map_to_new_range(grid_x, -5, 5, 9, 0)
     grid_z = map_to_new_range(grid_z, -5, 5, 9, 0)
 
-    grid_x = round(grid_x)
-    grid_z = round(grid_z)
+    if (abs(grid_x) > GRID_SIZE or abs(grid_y) > GRID_SIZE or abs(grid_z) > GRID_SIZE):
+        grid_x = None
+        grid_z = None
 
-    grid_x = int(grid_x)
-    grid_y = int(grid_y)
-    grid_z = int(grid_z)
+        grid_x = None
+        grid_y = None
+        grid_z = None
+        return None
+    else:
+        grid_x = round(grid_x)
+        grid_z = round(grid_z)
+
+        grid_x = int(grid_x)
+        grid_y = int(grid_y)
+        grid_z = int(grid_z)
     
     return [grid_x, grid_y, grid_z]
 
@@ -223,8 +234,31 @@ def mouse_motion(x, y):
     global mouse_x, mouse_y, grid_pos
     mouse_x, mouse_y = x, y
     grid_pos = get_grid_position(x, y)
+    if grid_pos is None:
+        return None
+    if (abs(grid_pos[0]) > GRID_SIZE or abs(grid_pos[1]) > GRID_SIZE or abs(grid_pos[2]) > GRID_SIZE):
+        pass
+    else:
+        if grid[grid_pos[0]][grid_pos[1]][grid_pos[2]] == 1:
+            if abs(grid_pos[1]) < GRID_SIZE/2:
+                grid_pos[1] += 1
+    
     glutPostRedisplay()
 
+def OnMouseClick(button, state, x, y):
+    global clicked
+    if button == GLUT_LEFT_BUTTON and state == GLUT_DOWN:
+        if grid_pos is not None:
+            place_block(grid_pos[0], grid_pos[1], grid_pos[2])
+        clicked = True
+    else:
+        clicked = False
+
+def place_block(x, y, z):
+    if grid[grid_pos[0], grid_pos[1], grid_pos[2]] == 0:  # Place block
+        grid[grid_pos[0], grid_pos[1], grid_pos[2]] = 1
+    else:  # Remove block
+        grid[grid_pos[0], grid_pos[1], grid_pos[2]] = 0
 #--------------------Ray Casting 3D Selection----------------------
 
 camera = 0
@@ -344,9 +378,11 @@ def display():
     #gluLookAt(LOOKAT_POSITION[0], LOOKAT_POSITION[1], LOOKAT_POSITION[2], 0, 0, 0, 0, 1, 0)
     draw_reference_line()
     draw_block_function()
+    draw_grid()
+    draw_blocks()
 
     # Highlight the current cursor position
-    draw_cube(cursor_x - GRID_SIZE // 2, cursor_y, cursor_z - GRID_SIZE // 2, highlight=True)
+    #draw_cube(cursor_x - GRID_SIZE // 2, cursor_y, cursor_z - GRID_SIZE // 2, highlight=True)
 
     # Draw text
     glColor3f(1.0, 1.0, 1.0)
@@ -370,6 +406,7 @@ def main():
     glutDisplayFunc(display_ortho)
     glutKeyboardFunc(key_press)
     glutPassiveMotionFunc(mouse_motion)
+    glutMouseFunc(OnMouseClick) # mouse clicking function
 
     glutInitWindowPosition(100 + window_width, 100)
     main_window = glutCreateWindow(b"Sketch Plan Drawer")
@@ -377,6 +414,7 @@ def main():
     glutDisplayFunc(display)
     glutKeyboardFunc(key_press)
     glutPassiveMotionFunc(mouse_motion)
+    glutMouseFunc(OnMouseClick) # mouse clicking function
 
     def update_windows():
         glutSetWindow(main_window)
