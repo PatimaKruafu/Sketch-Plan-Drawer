@@ -13,23 +13,19 @@ window_width, window_height = 800, 600
 GRID_SIZE = 10  # Grid size (10x10x10)
 grid = np.zeros((GRID_SIZE, GRID_SIZE, GRID_SIZE), dtype=int)  # 3D grid initialized with 0
 
-# Cursor position
-cursor_x, cursor_y, cursor_z = GRID_SIZE // 2, 0, GRID_SIZE // 2  # Start in the middle of the grid
-
 # Selected block for mouse interaction
 selected_block = None
 mouse_x, mouse_y = 0, 0
 grid_pos = None
 layer = 0
 
-#--------------------newcode----------------------
-
 CUBE_SIZE = 1
 CUBE_OFFSET = CUBE_SIZE/2
 
-#--------------------newcode----------------------
+# Cursor position for keyboard
+cursor_x, cursor_y, cursor_z = GRID_SIZE // 2, 0, GRID_SIZE // 2  # Start in the middle of the grid
 
-#---Save And Load Function
+#--------------------Save And Load Function--------------------
 # Dictionary to store multiple grid states
 grid_slots = {}
 current_slot = 0
@@ -59,25 +55,7 @@ def load_grid(slot):
         current_slot = slot
     else:
         print(f"Slot {slot} is empty")
-
-    
-
-# Save grid to file
-def save_grid_to_file():
-    with open('grid_save.pkl', 'wb') as f:
-        pickle.dump(grid, f)
-    print("Grid saved to grid_save.pkl")
-
-# Load grid from file
-def load_grid_from_file():
-    global grid
-    try:
-        with open('grid_save.pkl', 'rb') as f:
-            grid = pickle.load(f)
-        print("Grid loaded from grid_save.pkl")
-    except FileNotFoundError:
-        print("No save file found.")
-#---Save And Load Function
+#--------------------Save And Load Function--------------------
 
 #--------------------Init----------------------
 # Initialize OpenGL and GLUT
@@ -120,13 +98,13 @@ def draw_grid():
 
 def draw_reference_line():
     HALF_GRID = int(GRID_SIZE/2)
-    glColor3f(1, 0, 0)
+    glColor3f(0, 0, 1)
     glBegin(GL_LINES)
     glVertex3f(-HALF_GRID, 0, -HALF_GRID)
     glVertex3f(-HALF_GRID, 0, HALF_GRID)
     glEnd()
 
-    glColor3f(0, 0, 1)
+    glColor3f(1, 0, 0)
     glBegin(GL_LINES)
     glVertex3f(-HALF_GRID, 0, -HALF_GRID)
     glVertex3f(HALF_GRID, 0, -HALF_GRID)
@@ -151,10 +129,8 @@ def draw_cube(x, y, z, highlight=False):
     glPushMatrix()
     glTranslatef(x + CUBE_OFFSET, y + CUBE_OFFSET, z + CUBE_OFFSET)
     if highlight:
-        #glColor3f(1.0, 1.0, 0.0)  # Highlight color for the cursor
         glColor3f(222/255, 222/255, 47/255)  # Highlight color for the cursor
     else:
-        #glColor3f(1.0, 0.0, 0.0)  # Red color for cubes
         glColor3f(79/255, 194/255, 152/255)
     glutSolidCube(CUBE_SIZE)
     glPopMatrix()
@@ -268,9 +244,9 @@ def get_grid_position(mouse_x, mouse_y):
         grid_y = 0 """
     
 
-    # Map grid positions from -5-5 to 0-9
-    grid_x = map_to_new_range(grid_x, -5, 5, 9, 0)
-    grid_z = map_to_new_range(grid_z, -5, 5, 9, 0)
+    # Map grid positions
+    grid_x = map_to_new_range(grid_x, -GRID_SIZE/2, GRID_SIZE/2, GRID_SIZE-1, 0)
+    grid_z = map_to_new_range(grid_z, -GRID_SIZE/2, GRID_SIZE/2, GRID_SIZE-1, 0)
 
     if (abs(grid_x) > GRID_SIZE or abs(grid_y) > GRID_SIZE or abs(grid_z) > GRID_SIZE):
         grid_x = None
@@ -281,8 +257,6 @@ def get_grid_position(mouse_x, mouse_y):
         grid_z = None
         return None
     else:
-        #grid_x = round(grid_x)
-        #grid_z = round(grid_z)
         grid_x = math.floor(grid_x)
         grid_z = math.floor(grid_z)
 
@@ -364,11 +338,6 @@ def key_press(key, x, y):
         camera -= 1
         #SelectCamera(camera)
 
-    # Save grid to file
-    elif key == 'k':
-        save_grid_to_file()   
-    # Load grid from file
-
     # Save grid to slot
     elif key == '1':
         save_grid('slot1')
@@ -385,8 +354,6 @@ def key_press(key, x, y):
     elif key == '6':
         load_grid('slot3')
 
-    elif key == 'l':
-        load_grid_from_file()
     layer = layer % GRID_SIZE
     camera = (camera % 4)
 
@@ -405,8 +372,6 @@ def draw_text(x, y, text):
 #or
 #at_position = [+-10, a, b]
 
-eye_width = GRID_SIZE
-eye_depth = GRID_SIZE
 eye_height = GRID_SIZE * math.tan( math.radians( 90 - math.degrees( math.asin(1/math.sqrt(3)) ) ) )
 eye_position = [GRID_SIZE, eye_height, GRID_SIZE]
 new_eye_position = [GRID_SIZE, eye_height, GRID_SIZE]
@@ -423,28 +388,25 @@ def SelectCamera(cam):
     match cam:
         case 0 :
             new_eye_position = [GRID_SIZE, eye_height, GRID_SIZE]
-            eye_position = [GRID_SIZE, eye_height, GRID_SIZE]
         case 1 :
-            new_eye_position = [GRID_SIZE, eye_height, -GRID_SIZE]
-            eye_position = [GRID_SIZE, eye_height, -GRID_SIZE]
+            new_eye_position = [-GRID_SIZE, eye_height, GRID_SIZE]
         case 2 :
             new_eye_position = [-GRID_SIZE, eye_height, -GRID_SIZE]
-            eye_position = [-GRID_SIZE, eye_height, -GRID_SIZE]
         case 3 :
-            new_eye_position = [-GRID_SIZE, eye_height, GRID_SIZE]
-            eye_position = [-GRID_SIZE, eye_height, GRID_SIZE]
+            new_eye_position = [GRID_SIZE, eye_height, -GRID_SIZE]
 
     return new_eye_position
 
 def RotateCamera(pos, newpos):
-    pos[0] += newpos[0] - pos[0] / CAMERA_ROTATE_SPEED
-    pos[1] += newpos[1] - pos[1] / CAMERA_ROTATE_SPEED
+    pos[0] += (newpos[0] - pos[0]) / CAMERA_ROTATE_SPEED
+    pos[2] += (newpos[2] - pos[2]) / CAMERA_ROTATE_SPEED
+
+    return pos
 
 #--------------------Camera Control----------------------
 
 def display_ortho():
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
-    #glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH)
     glLoadIdentity()
 
     # Draw block in orthographic projection
@@ -454,28 +416,22 @@ def display_ortho():
 
 # Display callback
 def display():
+    global eye_position, new_eye_position
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
     glLoadIdentity()
-    #gluLookAt(0, 10, 20, 0, 0, 0, 0, 1, 0)
-    #gluLookAt(EyeX, EyeY, EyeZ, 0, 0, 0, 0, 1, 0)
     SelectCamera(camera)
+    eye_position = RotateCamera(eye_position, new_eye_position)
     gluLookAt(eye_position[0], eye_position[1], eye_position[2], 0, 0, 0, 0, 1, 0)
-    
-    #gluLookAt(LOOKAT_POSITION[0], LOOKAT_POSITION[1], LOOKAT_POSITION[2], 0, 0, 0, 0, 1, 0)
+
     draw_reference_line()
     draw_block_function()
-    draw_grid()
-    draw_blocks()
-
-    # Highlight the current cursor position
-    #draw_cube(cursor_x - GRID_SIZE // 2, cursor_y, cursor_z - GRID_SIZE // 2, highlight=True)
 
     # Draw text
     glColor3f(1.0, 1.0, 1.0)
     draw_text(10, window_height - 20, f"Cursor: ({cursor_x}, {cursor_y}, {cursor_z})")
     draw_text(10, window_height - 40, f"Mouse: ({mouse_x}, {mouse_y}), Grid Pos: {grid_pos}, Draw Layer: {layer}")
     #draw_text(10, window_height - 60, "Controls: W (North), S (South), A (West), D (East), Enter (Place/Remove Block)")
-    #draw_text(10, window_height - 80, f"View : {camera} pos : {eye_position}")
+    #draw_text(10, window_height - 120, f"View : {camera} pos : {eye_position}")
     
     draw_text(10, window_height - 80, f"Save Slot : {current_slot}")
     
@@ -486,16 +442,14 @@ def display():
     elif file_status == "not saved":
         draw_text(10, window_height - 100, f"Not Saved")
 
-    
-    draw_text(window_width - 300, window_height - 20, "Press 'K' to Save, 'L' to Load")
-    draw_text(window_width - 300, window_height - 40, "Press '1', '2', '3' to Save to Slots")
-    draw_text(window_width - 300, window_height - 60, "Press '4', '5', '6' to Load from Slots")
+    draw_text(window_width - 300, window_height - 20, "Press '1', '2', '3' to Save to Slots")
+    draw_text(window_width - 300, window_height - 40, "Press '4', '5', '6' to Load from Slots")
 
     draw_text(window_width - 630, 0 + 20, "Press Q or E to Rotate Camera Counter Clockwise or Clockwise")
     draw_text(window_width - 630, 0 + 40, "Press Z or E to Change Vertical Drawing Layer down 1 layer or up 1 layer")
 
 
-    #RotateCamera(eye_position, new_eye_position)
+    
     glutSwapBuffers()
 
 # Main function
