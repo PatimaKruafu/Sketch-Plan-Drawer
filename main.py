@@ -428,7 +428,7 @@ def display():
 
     # Draw text
     glColor3f(1.0, 1.0, 1.0)
-    draw_text(10, window_height - 20, f"Cursor: ({cursor_x}, {cursor_y}, {cursor_z})")
+    #draw_text(10, window_height - 20, f"Cursor: ({cursor_x}, {cursor_y}, {cursor_z})")
     draw_text(10, window_height - 40, f"Mouse: ({mouse_x}, {mouse_y}), Grid Pos: {grid_pos}, Draw Layer: {layer}")
     #draw_text(10, window_height - 60, "Controls: W (North), S (South), A (West), D (East), Enter (Place/Remove Block)")
     #draw_text(10, window_height - 120, f"View : {camera} pos : {eye_position}")
@@ -446,7 +446,7 @@ def display():
     draw_text(window_width - 300, window_height - 40, "Press '4', '5', '6' to Load from Slots")
 
     draw_text(window_width - 630, 0 + 20, "Press Q or E to Rotate Camera Counter Clockwise or Clockwise")
-    draw_text(window_width - 630, 0 + 40, "Press Z or E to Change Vertical Drawing Layer down 1 layer or up 1 layer")
+    draw_text(window_width - 630, 0 + 40, "Press Z or C to Change Vertical Drawing Layer down 1 layer or up 1 layer")
 
 
     
